@@ -32,4 +32,8 @@ public class MemoryUserRepository implements Repository{
     public Collection<User> findAll() {
         return users.values();
     }
+
+    public void clear() {
+        users.clear();
+    }
 }
