@@ -1,4 +1,4 @@
-package http.request;
+package http.commons;
 
 import http.ExceptionMessage;
 

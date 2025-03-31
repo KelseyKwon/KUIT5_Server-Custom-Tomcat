@@ -1,9 +1,8 @@
-package http.request;
+package http.commons;
 
 import java.util.Map;
 
 import http.ExceptionMessage;
-import http.ExceptionMessage.*;
 
 public enum RequestHttpHeader {
     CONTENT_LENGTH("Content-Length"),

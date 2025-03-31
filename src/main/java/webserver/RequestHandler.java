@@ -1,7 +1,7 @@
 package webserver;
 
 import db.MemoryUserRepository;
-import http.ExceptionMessage;
+import http.commons.*;
 import http.request.*;
 import http.util.HttpRequestUtils;
 import http.util.IOUtils;
@@ -41,6 +41,8 @@ public class RequestHandler implements Runnable{
         try (InputStream in = connection.getInputStream(); OutputStream out = connection.getOutputStream()) {
             BufferedReader br = new BufferedReader(new InputStreamReader(in));
             DataOutputStream dos = new DataOutputStream(out);
+
+            HttpRequest httpRequest = HttpRequest.from(br);
 
             //===============request start line 읽기=============//
             String requestStartLine = br.readLine();

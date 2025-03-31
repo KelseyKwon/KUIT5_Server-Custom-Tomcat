@@ -1,7 +1,7 @@
-package http.request;
+package http.commons;
 
 import http.ExceptionMessage;
-import http.ExceptionMessage.*;
+
 public enum HttpRequestPath {
     HOME("/", "/index.html"),
     SIGNUP("/user/signup", "user/form.html"),

@@ -1,4 +1,4 @@
-package http.request;
+package http.commons;
 
 public enum HttpStatusCode {
     SUCCESS(200, "OK"),
