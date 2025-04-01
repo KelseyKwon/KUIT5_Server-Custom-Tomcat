@@ -2,12 +2,18 @@ package webserver;
 
 import db.MemoryUserRepository;
 import model.User;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import support.StubSocket;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class RequestHandlerTest {
+    @BeforeEach
+    void setUp() {
+        MemoryUserRepository.getInstance().clear();
+    }
+
     @Test
     @DisplayName("회원가입 GET 방식 성공 테스트")
     void signUpByGETMethod() {
@@ -15,8 +21,8 @@ class RequestHandlerTest {
         String httpRequest = String.join("\r\n",
                 "GET /user/signup?userId=nykwon7777&password=1234&name=Kwon&email=nykwon7777@gmail.com HTTP/1.1",
                 "Host: localhost:80",
-                "", // 헤더 끝
-                ""  // GET은 바디 없음
+                "", // 헤더 없어
+                ""  // 바디 없어
         );
 
         StubSocket socket = new StubSocket(httpRequest);
@@ -48,7 +54,7 @@ class RequestHandlerTest {
                 "Host: localhost",
                 "Content-Type: application/x-www-form-urlencoded",
                 "Content-Length: " + body.getBytes().length,
-                "", // 헤더 끝
+                "", // 헤더 없어
                 body // 실제 body
         );
 
@@ -85,7 +91,7 @@ class RequestHandlerTest {
                 "Host: localhost",
                 "Content-Type: application/x-www-form-urlencoded",
                 "Content-Length: " + body.getBytes().length,
-                "", // 헤더 끝
+                "",  // 헤더 없어
                 body   // 실제 body
         );
 

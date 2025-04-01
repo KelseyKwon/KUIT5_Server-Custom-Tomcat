@@ -1,5 +1,8 @@
 package http.request;
 
+import http.commons.HttpMethod;
+import http.util.IOUtils;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.Arrays;
@@ -10,13 +13,13 @@ import java.util.stream.Collectors;
 import static http.ExceptionMessage.INVALID_REQUEST_START_LINE;
 
 public class HttpRequest {
-    private final String requestMethod;
+    private final HttpMethod requestMethod;
     private final String requestPath;
     private final String httpVersion;
     private final Map<String, String> httpHeaders;
     private final String body;
 
-    public HttpRequest(String requestMethod, String requestPath, String httpVersion, Map<String, String> httpHeaders, String body) {
+    public HttpRequest(HttpMethod requestMethod, String requestPath, String httpVersion, Map<String, String> httpHeaders, String body) {
         this.requestMethod = requestMethod;
         this.requestPath = requestPath;
         this.httpVersion = httpVersion;
@@ -29,7 +32,7 @@ public class HttpRequest {
         Map<String, String> requestHeaders = getRequestHeadersInstance(br);
         String body = getRequestBodyInstance(br, requestHeaders);
 
-        return new HttpRequest(requestStartLine.get(0), requestStartLine.get(1), requestStartLine.get(2), requestHeaders, body);
+        return new HttpRequest(HttpMethod.from(requestStartLine.get(0)), requestStartLine.get(1), requestStartLine.get(2), requestHeaders, body);
     }
 
     private static List<String> getRequestStartLineInstance(BufferedReader br) throws IOException {
@@ -57,12 +60,7 @@ public class HttpRequest {
 
     private static String getRequestBodyInstance(BufferedReader br, Map<String, String> requestHeaders) throws IOException {
         int bodyLength = requestHeaders.containsKey("Content-Length") ? Integer.parseInt(requestHeaders.get("Content-Length")) : 0;
-        char[] bodyContents = new char[bodyLength];
-        if (bodyHasCharacters(bodyLength)) {
-            br.read(bodyContents, 0, bodyLength);
-        }
-        String body = String.valueOf(bodyContents);
-        return body;
+        return IOUtils.readData(br, bodyLength);
     }
 
     private static void validateRequestStartLine(boolean requestStartLine) {
@@ -96,7 +94,7 @@ public class HttpRequest {
         return requestPath;
     }
 
-    public String getRequestMethod() {
+    public HttpMethod getRequestMethod() {
         return requestMethod;
     }
 

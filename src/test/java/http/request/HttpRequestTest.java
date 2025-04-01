@@ -1,5 +1,6 @@
 package http.request;
 
+import http.commons.HttpMethod;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -26,7 +27,7 @@ class HttpRequestTest {
         HttpRequest httpRequest = HttpRequest.from(bufferedReaderFromFile(testDirectory + getPath));
 
         //then
-        assertEquals("POST", httpRequest.getRequestMethod());
+        assertEquals(HttpMethod.POST, httpRequest.getRequestMethod());
         assertEquals("/user/create", httpRequest.getRequestPath());
         assertEquals("HTTP/1.1", httpRequest.getHttpVersion());
         assertEquals("localhost:8080", httpRequest.getHttpHeaders().get("Host"));

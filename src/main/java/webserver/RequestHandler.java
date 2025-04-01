@@ -43,32 +43,13 @@ public class RequestHandler implements Runnable{
             DataOutputStream dos = new DataOutputStream(out);
 
             HttpRequest httpRequest = HttpRequest.from(br);
+            String filePath = httpRequest.getRequestPath();
+            HttpMethod method = httpRequest.getRequestMethod();
+            Map<String, String> headers = httpRequest.getHttpHeaders();
 
-            //===============request start line 읽기=============//
-            String requestStartLine = br.readLine();
-            if (requestStartLine == null) {
-                throw new IllegalArgumentException(INVALID_REQUEST_START_LINE.getExceptionMessage());
+            if ("/".equals(filePath)) {
+                filePath = "/index.html";
             }
-
-            List<String> requests = Arrays.stream(requestStartLine.split(" ")).toList();
-            if (requests.size() != 3) {
-                throw new IllegalArgumentException(INVALID_REQUEST_START_LINE.getExceptionMessage());
-            }
-
-            HttpMethod method = HttpMethod.from(requests.get(0));
-            String filePath = requests.get(1);
-
-            //=============request header 읽기 ================//
-            StringBuilder sb = new StringBuilder();
-            String line = br.readLine();
-            while (!"".equals(line)) {
-                sb.append(line).append("\r\n");
-                line = br.readLine();
-            }
-            Map<String, String> headers = Arrays.stream(sb.toString().split("\r\n"))
-                    .map(header -> header.split(": ", 2))
-                    .filter(parts -> parts.length == 2)
-                    .collect(Collectors.toMap(parts -> parts[0], parts -> parts[1]));
 
             //=== 요구사항 2. GET 방식으로 회원가입 구현=== "/user/signup" //
             // http://localhost/user/signup?userId=nykwon7777&password=1234&name=222&email=333%40fff
@@ -108,7 +89,7 @@ public class RequestHandler implements Runnable{
 
                 // 입력값 검증
                 if (userId == null || userId.isBlank() || password == null || password.isBlank()) {
-                    response302Header(dos, HttpRequestPath.LOGIN_FAILED.getStaticFilePath());
+                    response302Header(dos, HttpRequestPath.LOGIN_FAILED.getUrl());
                     return;
                 }
 
