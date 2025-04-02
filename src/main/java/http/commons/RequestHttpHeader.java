@@ -41,7 +41,7 @@ public enum RequestHttpHeader {
         return findHeaderValues(headers, COOKIE);
     }
 
-    public static String writeHeaderLine(RequestHttpHeader headerName, String headerValue) {
-        return headerName.getHeaderMessage() + ": " + headerValue + "\r\n";
+    public static byte[] writeHeaderLine(RequestHttpHeader headerName, String headerValue) {
+        return (headerName.getHeaderMessage() + ": " + headerValue + "\r\n").getBytes();
     }
 }

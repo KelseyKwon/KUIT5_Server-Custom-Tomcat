@@ -2,7 +2,8 @@ package http.commons;
 
 public enum HttpStatusCode {
     SUCCESS(200, "OK"),
-    REDIRECT(302, "Redirect");
+    REDIRECT(302, "Redirect"),
+    FAILED(404, "Not Found");
 //    UNKNOWN(-1,"Unknown Status");
 
 
@@ -22,8 +23,8 @@ public enum HttpStatusCode {
         return description;
     }
 
-    public static String writeStatusLine(HttpStatusCode statusCode) {
-        return "HTTP/1.1 " + statusCode.getCode() + " " + statusCode.getDescription() + " \r\n";
+    public static byte[] writeStatusLine(HttpStatusCode statusCode) {
+        return ("HTTP/1.1 " + statusCode.getCode() + " " + statusCode.getDescription() + " \r\n").getBytes();
     }
 
 //    public static StatusCode getStatusFromCode(int code) {

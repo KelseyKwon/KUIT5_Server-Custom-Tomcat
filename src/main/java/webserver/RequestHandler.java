@@ -3,6 +3,7 @@ package webserver;
 import db.MemoryUserRepository;
 import http.commons.*;
 import http.request.*;
+import http.response.HttpResponse;
 import http.util.HttpRequestUtils;
 import http.util.IOUtils;
 import model.User;
@@ -35,6 +36,8 @@ public class RequestHandler implements Runnable{
      * 2. 입출력 스트림 열기 (br : client의 문자열 요청을 읽기 위한 래퍼, dos : 응답을 바이트로 보내기 위한 스트림)
      * 3. 클라이언트에 HTTP 응답 전송. (responseBody로 본문, response200Header로 헤더 전송)
      */
+
+    //TODO: Cookie: logined-true로 계속 설정되어 있는 것을 고치기
     @Override
     public void run() {
         log.log(Level.INFO, "New Client Connect! Connected IP : " + connection.getInetAddress() + ", Port : " + connection.getPort());
@@ -43,6 +46,8 @@ public class RequestHandler implements Runnable{
             DataOutputStream dos = new DataOutputStream(out);
 
             HttpRequest httpRequest = HttpRequest.from(br);
+            HttpResponse httpResponse = new HttpResponse(dos);
+
             String filePath = httpRequest.getRequestPath();
             HttpMethod method = httpRequest.getRequestMethod();
             Map<String, String> headers = httpRequest.getHttpHeaders();
@@ -61,7 +66,7 @@ public class RequestHandler implements Runnable{
                 Map<String, String> queryParams = HttpRequestUtils.parseQueryParameter(queryString);
                 User user = UserQueryKey.toUser(queryParams);
                 MemoryUserRepository.getInstance().addUser(user);
-                response302Header(dos, HttpRequestPath.HOME.getStaticFilePath());
+                httpResponse.redirect(HttpRequestPath.HOME.getStaticFilePath());
                 return;
             }
 
@@ -71,7 +76,7 @@ public class RequestHandler implements Runnable{
                 Map<String, String> queryParams = HttpRequestUtils.parseQueryParameter(body);
                 User user = UserQueryKey.toUser(queryParams);
                 MemoryUserRepository.getInstance().addUser(user);
-                response302Header(dos, HttpRequestPath.HOME.getStaticFilePath());
+                httpResponse.redirect(HttpRequestPath.HOME.getStaticFilePath());
                 return;
             }
 
@@ -86,7 +91,7 @@ public class RequestHandler implements Runnable{
 
                 // 입력값 검증
                 if (userId == null || userId.isBlank() || password == null || password.isBlank()) {
-                    response302Header(dos, HttpRequestPath.LOGIN_FAILED.getUrl());
+                    httpResponse.redirect(HttpRequestPath.LOGIN_FAILED.getUrl());
                     return;
                 }
 
@@ -95,10 +100,10 @@ public class RequestHandler implements Runnable{
                 User userById = userRepository.findUserById(userId);
 
                 if (userById.getUserId().equals(userId) && userById.getPassword().equals(password)) {
-                    response302Header(dos, HttpRequestPath.HOME.getStaticFilePath(), "logined-true");
+                    httpResponse.redirect(HttpRequestPath.HOME.getStaticFilePath(), "logined-true");
                     return;
                 } else {
-                    response302Header(dos, HttpRequestPath.LOGIN_FAILED.getUrl());
+                    httpResponse.redirect(HttpRequestPath.LOGIN_FAILED.getUrl());
                     return;
                 }
 
@@ -108,30 +113,15 @@ public class RequestHandler implements Runnable{
             if (filePath.startsWith(HttpRequestPath.USER_LIST.getUrl())) {
                 String cookieStr = RequestHttpHeader.getCookie(headers);
                 if ("logined-true".equals(cookieStr)) {
-                    Path listPath = Paths.get("webapp", HttpRequestPath.USER_LIST.getStaticFilePath());
-                    byte[] pathBody = Files.readAllBytes(listPath);
-                    response200Header(dos, pathBody.length);
-                    responseBody(dos, pathBody);
+                    httpResponse.forward(HttpRequestPath.USER_LIST.getStaticFilePath());
                 } else {
-                    response302Header(dos, HttpRequestPath.LOGIN.getStaticFilePath());
+                    httpResponse.redirect(HttpRequestPath.LOGIN.getStaticFilePath());
                 }
                 return;
             }
 
             //=====요구사항1 & 7. 정적 파일 처리====//
-            Path path = Paths.get("webapp" + filePath);
-
-            if (Files.exists(path)) {
-                byte[] pathBody = Files.readAllBytes(path);
-                String contentType = getContentType(filePath);
-                response200Header(dos, pathBody.length, contentType);
-                responseBody(dos, pathBody);
-            } else {
-                byte[] pathBody = "404 Not Found".getBytes();
-                response200Header(dos, pathBody.length, "text/plain");
-                responseBody(dos, pathBody);
-            }
-
+            httpResponse.forward(filePath);
 
         } catch (IOException e) {
             log.log(Level.SEVERE,e.getMessage());
@@ -143,23 +133,6 @@ public class RequestHandler implements Runnable{
         return "text/html;charset=utf-8";
     }
 
-    /**
-     * 응답 헤더 생성
-     */
-    private void response200Header(DataOutputStream dos, int lengthOfBodyContent) {
-        response200Header(dos, lengthOfBodyContent, "text/html;charset=utf-8");
-    }
-
-    private void response200Header(DataOutputStream dos, int lengthOfBodyContent, String typeOfBodyContent) {
-        try {
-            dos.writeBytes(HttpStatusCode.writeStatusLine(HttpStatusCode.SUCCESS));
-            dos.writeBytes(RequestHttpHeader.writeHeaderLine(RequestHttpHeader.CONTENT_TYPE, typeOfBodyContent));
-            dos.writeBytes(RequestHttpHeader.writeHeaderLine(RequestHttpHeader.CONTENT_LENGTH, String.valueOf(lengthOfBodyContent)));
-            dos.writeBytes("\r\n");
-        } catch (IOException e) {
-            log.log(Level.SEVERE, e.getMessage());
-        }
-    }
 
     /**
      * 응답 본문 전송 후 flush로 스트림 비우기
@@ -168,24 +141,6 @@ public class RequestHandler implements Runnable{
         try {
             dos.write(body, 0, body.length);
             dos.flush();
-        } catch (IOException e) {
-            log.log(Level.SEVERE, e.getMessage());
-        }
-    }
-
-    // 302 : 일시 리다이렉션
-    private void response302Header(DataOutputStream dos, String path) {
-        response302Header(dos, path, null);
-    }
-
-    private void response302Header(DataOutputStream dos, String path, String cookie) {
-        try {
-            dos.writeBytes(HttpStatusCode.writeStatusLine(HttpStatusCode.REDIRECT));
-            dos.writeBytes(RequestHttpHeader.writeHeaderLine(RequestHttpHeader.LOCATION, path));
-            if (cookie != null) {
-                dos.writeBytes(RequestHttpHeader.writeHeaderLine(RequestHttpHeader.SET_COOKIE, cookie));
-            }
-            dos.writeBytes("\r\n");
         } catch (IOException e) {
             log.log(Level.SEVERE, e.getMessage());
         }

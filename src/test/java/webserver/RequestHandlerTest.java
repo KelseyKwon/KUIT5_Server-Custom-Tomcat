@@ -168,4 +168,27 @@ class RequestHandlerTest {
         assertThat(response).contains("Content-Type: text/html");
     }
 
+    @Test
+    @DisplayName("유저 리스트 로딩 테스트 (로그인 상태가 아님)")
+    void userListLoadingFailTest() {
+        // given: 유저 리스트 요청 시, 쿠키에 "logined-true"가 포함되지 않은 경우
+        String httpRequest = String.join("\r\n",
+                "GET /user/userList HTTP/1.1",
+                "Host: localhost",
+                "", // 헤더 끝
+                ""  // GET은 body 없음
+        );
+
+        StubSocket socket = new StubSocket(httpRequest);
+        RequestHandler requestHandler = new RequestHandler(socket);
+
+        // when
+        requestHandler.run();
+
+        // then: 유저 리스트를 반환하는 페이지(여기서는 /index.html 파일 내용)를 200 OK로 응답해야 함
+        String response = socket.output();
+        assertThat(response).contains("HTTP/1.1 302 Redirect");
+        assertThat(response).contains("Location: user/login.html");
+    }
+
 }
