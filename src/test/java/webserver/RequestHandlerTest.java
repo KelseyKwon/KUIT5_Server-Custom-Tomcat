@@ -188,7 +188,7 @@ class RequestHandlerTest {
         // then: 유저 리스트를 반환하는 페이지(여기서는 /index.html 파일 내용)를 200 OK로 응답해야 함
         String response = socket.output();
         assertThat(response).contains("HTTP/1.1 302 Redirect");
-        assertThat(response).contains("Location: user/login.html");
+        assertThat(response).contains("Location: /user/login.html");
     }
 
 }

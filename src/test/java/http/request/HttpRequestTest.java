@@ -34,7 +34,7 @@ class HttpRequestTest {
         assertEquals("keep-alive", httpRequest.getHttpHeaders().get("Connection"));
         assertEquals("40", httpRequest.getHttpHeaders().get("Content-Length"));
         assertEquals("*/*", httpRequest.getHttpHeaders().get("Accept"));
-//        assertEquals("userId=jw&password=password&name=jungwoo", httpRequest.getBody());
+        assertEquals("userId=jw&password=password&name=jungwoo", httpRequest.getBody());
     }
 
 }

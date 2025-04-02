@@ -60,17 +60,6 @@ public class HttpResponse {
         }
     }
 
-    private void staticFileFromPathDoesNotExist(String filePath) {
-        byte[] pathBody = "404 Not Found".getBytes();
-        String contentType = getContentType(filePath);
-        response404Header(pathBody.length, contentType);
-    }
-
-    private String getContentType(String filePath) {
-        if (filePath.endsWith(".css")) return "text/css";
-        return "text/html;charset=utf-8";
-    }
-
 
     public void response200Header(int bodyLength, String bodyType) {
                 try {
@@ -113,5 +102,16 @@ public class HttpResponse {
         } catch (IOException e) {
             log.log(Level.SEVERE, e.getMessage());
         }
+    }
+
+    private void staticFileFromPathDoesNotExist(String filePath) {
+        byte[] pathBody = "404 Not Found".getBytes();
+        String contentType = getContentType(filePath);
+        response404Header(pathBody.length, contentType);
+    }
+
+    private String getContentType(String filePath) {
+        if (filePath.endsWith(".css")) return "text/css";
+        return "text/html;charset=utf-8";
     }
 }

@@ -1,6 +1,8 @@
 package webserver;
 
+import controller.*;
 import db.MemoryUserRepository;
+import db.Repository;
 import http.commons.*;
 import http.request.*;
 import http.response.HttpResponse;
@@ -27,8 +29,12 @@ public class RequestHandler implements Runnable{
     Socket connection; // 클라이언트와의 통신을 담당하는 소켓
     private static final Logger log = Logger.getLogger(RequestHandler.class.getName());
 
+    private final Repository repository;
+    private Controller controller = new ForwardController();
+
     public RequestHandler(Socket connection) {
         this.connection = connection;
+        repository = MemoryUserRepository.getInstance();
     }
 
     /**
@@ -36,8 +42,6 @@ public class RequestHandler implements Runnable{
      * 2. 입출력 스트림 열기 (br : client의 문자열 요청을 읽기 위한 래퍼, dos : 응답을 바이트로 보내기 위한 스트림)
      * 3. 클라이언트에 HTTP 응답 전송. (responseBody로 본문, response200Header로 헤더 전송)
      */
-
-    //TODO: Cookie: logined-true로 계속 설정되어 있는 것을 고치기
     @Override
     public void run() {
         log.log(Level.INFO, "New Client Connect! Connected IP : " + connection.getInetAddress() + ", Port : " + connection.getPort());
@@ -49,9 +53,6 @@ public class RequestHandler implements Runnable{
             HttpResponse httpResponse = new HttpResponse(dos);
 
             String filePath = httpRequest.getRequestPath();
-            HttpMethod method = httpRequest.getRequestMethod();
-            Map<String, String> headers = httpRequest.getHttpHeaders();
-            String body = httpRequest.getBody();
 
             if ("/".equals(filePath)) {
                 filePath = "/index.html";
@@ -59,91 +60,30 @@ public class RequestHandler implements Runnable{
 
             //=== 요구사항 2. GET 방식으로 회원가입 구현=== "/user/signup" //
             // http://localhost/user/signup?userId=nykwon7777&password=1234&name=222&email=333%40fff
-            if (filePath.startsWith(HttpRequestPath.SIGNUP.getUrl()) && method == HttpMethod.GET) {
-                String[] parts = filePath.split("\\?");
-//                String onlyPath = parts[0];
-                String queryString = parts.length > 1 ? parts[1] : "";
-                Map<String, String> queryParams = HttpRequestUtils.parseQueryParameter(queryString);
-                User user = UserQueryKey.toUser(queryParams);
-                MemoryUserRepository.getInstance().addUser(user);
-                httpResponse.redirect(HttpRequestPath.HOME.getStaticFilePath());
-                return;
+            if (filePath.startsWith(HttpRequestPath.SIGNUP.getUrl())) {
+                controller = new SignupController();
             }
 
-            //=== 요구사항 3. POST 방식으로 회원가입 구현===//
-            // http://localhost/user/signup?userId=nykwon7777&password=1234&name=222&email=333%40fff
-            if (filePath.startsWith(HttpRequestPath.SIGNUP.getUrl()) && method == HttpMethod.POST) {
-                Map<String, String> queryParams = HttpRequestUtils.parseQueryParameter(body);
-                User user = UserQueryKey.toUser(queryParams);
-                MemoryUserRepository.getInstance().addUser(user);
-                httpResponse.redirect(HttpRequestPath.HOME.getStaticFilePath());
-                return;
-            }
 
             //=====요구사항 5. login 기능=====//
-            if (filePath.startsWith(HttpRequestPath.LOGIN.getUrl()) && method == HttpMethod.POST) {
-                int contentLength = RequestHttpHeader.getContentLength(headers);
-                Map<String, String> queryParams = HttpRequestUtils.parseQueryParameter(body);
-
-
-                String userId = queryParams.get(UserQueryKey.USERID.getQueryKey());
-                String password = queryParams.get(UserQueryKey.PASSWORD.getQueryKey());
-
-                // 입력값 검증
-                if (userId == null || userId.isBlank() || password == null || password.isBlank()) {
-                    httpResponse.redirect(HttpRequestPath.LOGIN_FAILED.getUrl());
-                    return;
-                }
-
-                // DB에서 id로 찾은 userId가 쿼리로 얻은 userId와 같은지.
-                MemoryUserRepository userRepository = MemoryUserRepository.getInstance();
-                User userById = userRepository.findUserById(userId);
-
-                if (userById.getUserId().equals(userId) && userById.getPassword().equals(password)) {
-                    httpResponse.redirect(HttpRequestPath.HOME.getStaticFilePath(), "logined-true");
-                    return;
-                } else {
-                    httpResponse.redirect(HttpRequestPath.LOGIN_FAILED.getUrl());
-                    return;
-                }
-
+            if (filePath.startsWith(HttpRequestPath.LOGIN.getUrl()) && httpRequest.getRequestMethod() == HttpMethod.POST) {
+                controller = new LoginController();
             }
 
             //=====요구사항 6. 사용자 목록 출력=====//
             if (filePath.startsWith(HttpRequestPath.USER_LIST.getUrl())) {
-                String cookieStr = RequestHttpHeader.getCookie(headers);
-                if ("logined-true".equals(cookieStr)) {
-                    httpResponse.forward(HttpRequestPath.USER_LIST.getStaticFilePath());
-                } else {
-                    httpResponse.redirect(HttpRequestPath.LOGIN.getStaticFilePath());
-                }
-                return;
+                controller = new ListController();
             }
 
             //=====요구사항1 & 7. 정적 파일 처리====//
-            httpResponse.forward(filePath);
+            if (httpRequest.getRequestMethod() == HttpMethod.GET && httpRequest.getRequestPath().endsWith(".html")) {
+                controller = new ForwardController();
+            }
+            controller.execute(httpRequest, httpResponse);
 
         } catch (IOException e) {
             log.log(Level.SEVERE,e.getMessage());
+            System.out.println(Arrays.toString(e.getStackTrace()));
         }
     }
-
-    private String getContentType(String filePath) {
-        if (filePath.endsWith(".css")) return "text/css";
-        return "text/html;charset=utf-8";
-    }
-
-
-    /**
-     * 응답 본문 전송 후 flush로 스트림 비우기
-     */
-    private void responseBody(DataOutputStream dos, byte[] body) {
-        try {
-            dos.write(body, 0, body.length);
-            dos.flush();
-        } catch (IOException e) {
-            log.log(Level.SEVERE, e.getMessage());
-        }
-    }
-
 }
