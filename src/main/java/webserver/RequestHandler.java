@@ -46,6 +46,7 @@ public class RequestHandler implements Runnable{
             String filePath = httpRequest.getRequestPath();
             HttpMethod method = httpRequest.getRequestMethod();
             Map<String, String> headers = httpRequest.getHttpHeaders();
+            String body = httpRequest.getBody();
 
             if ("/".equals(filePath)) {
                 filePath = "/index.html";
@@ -67,8 +68,6 @@ public class RequestHandler implements Runnable{
             //=== 요구사항 3. POST 방식으로 회원가입 구현===//
             // http://localhost/user/signup?userId=nykwon7777&password=1234&name=222&email=333%40fff
             if (filePath.startsWith(HttpRequestPath.SIGNUP.getUrl()) && method == HttpMethod.POST) {
-                int contentLength = RequestHttpHeader.getContentLength(headers);
-                String body = IOUtils.readData(br, contentLength);
                 Map<String, String> queryParams = HttpRequestUtils.parseQueryParameter(body);
                 User user = UserQueryKey.toUser(queryParams);
                 MemoryUserRepository.getInstance().addUser(user);
@@ -79,8 +78,6 @@ public class RequestHandler implements Runnable{
             //=====요구사항 5. login 기능=====//
             if (filePath.startsWith(HttpRequestPath.LOGIN.getUrl()) && method == HttpMethod.POST) {
                 int contentLength = RequestHttpHeader.getContentLength(headers);
-
-                String body = IOUtils.readData(br, contentLength);
                 Map<String, String> queryParams = HttpRequestUtils.parseQueryParameter(body);
 
 
@@ -112,9 +109,9 @@ public class RequestHandler implements Runnable{
                 String cookieStr = RequestHttpHeader.getCookie(headers);
                 if ("logined-true".equals(cookieStr)) {
                     Path listPath = Paths.get("webapp", HttpRequestPath.USER_LIST.getStaticFilePath());
-                    byte[] body = Files.readAllBytes(listPath);
-                    response200Header(dos, body.length);
-                    responseBody(dos, body);
+                    byte[] pathBody = Files.readAllBytes(listPath);
+                    response200Header(dos, pathBody.length);
+                    responseBody(dos, pathBody);
                 } else {
                     response302Header(dos, HttpRequestPath.LOGIN.getStaticFilePath());
                 }
@@ -125,14 +122,14 @@ public class RequestHandler implements Runnable{
             Path path = Paths.get("webapp" + filePath);
 
             if (Files.exists(path)) {
-                byte[] body = Files.readAllBytes(path);
+                byte[] pathBody = Files.readAllBytes(path);
                 String contentType = getContentType(filePath);
-                response200Header(dos, body.length, contentType);
-                responseBody(dos, body);
+                response200Header(dos, pathBody.length, contentType);
+                responseBody(dos, pathBody);
             } else {
-                byte[] body = "404 Not Found".getBytes();
-                response200Header(dos, body.length, "text/plain");
-                responseBody(dos, body);
+                byte[] pathBody = "404 Not Found".getBytes();
+                response200Header(dos, pathBody.length, "text/plain");
+                responseBody(dos, pathBody);
             }
 
 

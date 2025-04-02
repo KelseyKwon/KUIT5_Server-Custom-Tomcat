@@ -5,6 +5,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 
 
 public class StubSocket extends Socket {
@@ -12,7 +13,7 @@ public class StubSocket extends Socket {
     private final ByteArrayOutputStream output = new ByteArrayOutputStream();
 
     public StubSocket(String data) {
-        this.input = new ByteArrayInputStream(data.getBytes());
+        this.input = new ByteArrayInputStream(data.getBytes(StandardCharsets.UTF_8));
     }
 
     @Override

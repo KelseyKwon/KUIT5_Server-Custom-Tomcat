@@ -1,11 +1,16 @@
 package webserver;
 
 import db.MemoryUserRepository;
+import http.util.HttpRequestUtils;
 import model.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import support.StubSocket;
+
+import java.nio.charset.StandardCharsets;
+import java.util.Map;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 class RequestHandlerTest {
@@ -53,7 +58,7 @@ class RequestHandlerTest {
                 "POST /user/signup HTTP/1.1",
                 "Host: localhost",
                 "Content-Type: application/x-www-form-urlencoded",
-                "Content-Length: " + body.getBytes().length,
+                "Content-Length: " + body.getBytes(StandardCharsets.UTF_8).length,
                 "", // 헤더 없어
                 body // 실제 body
         );
