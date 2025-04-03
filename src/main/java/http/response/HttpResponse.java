@@ -29,6 +29,11 @@ public class HttpResponse {
     // path를 분기문으로 나눠서 200, 302 상태의 메소드를 담당하는 곳으로 넘기기
     // 정적 html 파일을 보여주기
     public void forward(String filePath) throws IOException {
+
+        if ("/".equals(filePath) || "".equals(filePath)) {
+            filePath = "index.html";
+        }
+
         Path path = Paths.get("webapp", filePath);
         if (Files.exists(path)) {
             byte[] pathBody = Files.readAllBytes(path);

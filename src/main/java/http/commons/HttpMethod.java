@@ -4,11 +4,7 @@ import http.ExceptionMessage;
 
 public enum HttpMethod {
     GET,
-    POST,
-    PUT,
-    DELETE,
-    HEAD,
-    OPTIONS;
+    POST;
 
     public static HttpMethod from(String httpMethod) {
         for (HttpMethod method : values()) {

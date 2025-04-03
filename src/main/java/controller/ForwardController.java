@@ -11,5 +11,6 @@ public class ForwardController implements Controller{
     @Override
     public void execute(HttpRequest httpRequest, HttpResponse httpResponse) throws IOException {
         httpResponse.forward(httpRequest.getRequestPath());
+        return;
     }
 }
