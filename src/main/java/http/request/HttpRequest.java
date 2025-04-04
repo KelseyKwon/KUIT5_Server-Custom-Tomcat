@@ -1,6 +1,7 @@
 package http.request;
 
 import http.commons.HttpMethod;
+import http.commons.HttpRequestPath;
 import http.util.IOUtils;
 
 import java.io.BufferedReader;

@@ -39,7 +39,6 @@ public class RequestMapper {
         controllers.put("/user/signup", new SignupController());
         controllers.put("/user/login", new LoginController());
         controllers.put("/user/userList", new ListController());
-        controllers.put("/index.html", new ForwardController());
 
         return controllers;
     }

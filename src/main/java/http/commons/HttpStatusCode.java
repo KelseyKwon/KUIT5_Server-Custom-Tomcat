@@ -4,8 +4,6 @@ public enum HttpStatusCode {
     SUCCESS(200, "OK"),
     REDIRECT(302, "Redirect"),
     FAILED(404, "Not Found");
-//    UNKNOWN(-1,"Unknown Status");
-
 
     private final int code;
     private final String description;
@@ -27,12 +25,4 @@ public enum HttpStatusCode {
         return ("HTTP/1.1 " + statusCode.getCode() + " " + statusCode.getDescription() + " \r\n").getBytes();
     }
 
-//    public static StatusCode getStatusFromCode(int code) {
-//        for (StatusCode status : StatusCode.values()) {
-//            if (status.getCode() == code) {
-//                return status;
-//            }
-//        }
-//        return UNKNOWN;
-//    }
 }
